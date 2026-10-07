@@ -3,10 +3,10 @@
 from unittest.mock import patch
 
 from mcp_justwatch.server import (
-    search_content,
+    format_media_entry,
     get_details,
     get_offers_for_countries,
-    format_media_entry,
+    search_content,
 )
 
 
@@ -195,7 +195,7 @@ class TestSearchContent:
         )
 
         with patch("mcp_justwatch.server.justwatch.search", return_value=[mock_entry]):
-            result = search_content.fn(query="The Matrix", country="US")
+            result = search_content(query="The Matrix", country="US")
 
         assert "The Matrix" in result
         assert "1999" in result
@@ -204,7 +204,7 @@ class TestSearchContent:
     def test_search_content_no_results(self):
         """Test search with no results."""
         with patch("mcp_justwatch.server.justwatch.search", return_value=[]):
-            result = search_content.fn(query="NonexistentMovie12345", country="US")
+            result = search_content(query="NonexistentMovie12345", country="US")
 
         assert "No results found" in result
 
@@ -215,7 +215,7 @@ class TestSearchContent:
         with patch(
             "mcp_justwatch.server.justwatch.search", return_value=[mock_entry]
         ) as mock_search:
-            result = search_content.fn(
+            result = search_content(
                 query="Test",
                 country="GB",
                 language="en",
@@ -235,7 +235,7 @@ class TestSearchContent:
         with patch(
             "mcp_justwatch.server.justwatch.search", return_value=[mock_entry]
         ) as mock_search:
-            search_content.fn(query="Test", country="us")
+            search_content(query="Test", country="us")
 
         # Check that the country was uppercased
         call_args = mock_search.call_args
@@ -248,7 +248,7 @@ class TestSearchContent:
         with patch(
             "mcp_justwatch.server.justwatch.search", return_value=[mock_entry]
         ) as mock_search:
-            search_content.fn(query="Test", language="EN")
+            search_content(query="Test", language="EN")
 
         # Check that the language was lowercased
         call_args = mock_search.call_args
@@ -262,20 +262,20 @@ class TestSearchContent:
             "mcp_justwatch.server.justwatch.search", return_value=[mock_entry]
         ) as mock_search:
             # Test upper bound
-            search_content.fn(query="Test", count=100)
+            search_content(query="Test", count=100)
             assert mock_search.call_args.kwargs["count"] == 20
 
         with patch(
             "mcp_justwatch.server.justwatch.search", return_value=[mock_entry]
         ) as mock_search:
             # Test lower bound
-            search_content.fn(query="Test", count=0)
+            search_content(query="Test", count=0)
             assert mock_search.call_args.kwargs["count"] == 1
 
     def test_search_exception_handling(self):
         """Test exception handling in search."""
         with patch("mcp_justwatch.server.justwatch.search", side_effect=Exception("API Error")):
-            result = search_content.fn(query="Test")
+            result = search_content(query="Test")
 
         assert "Error" in result
         assert "API Error" in result
@@ -296,7 +296,7 @@ class TestGetDetails:
         )
 
         with patch("mcp_justwatch.server.justwatch.details", return_value=mock_entry):
-            result = get_details.fn(node_id="tm123", country="US")
+            result = get_details(node_id="tm123", country="US")
 
         assert "The Matrix" in result
         assert "tm123" in result
@@ -305,7 +305,7 @@ class TestGetDetails:
     def test_get_details_not_found(self):
         """Test details retrieval with no results."""
         with patch("mcp_justwatch.server.justwatch.details", return_value=None):
-            result = get_details.fn(node_id="tm999", country="US")
+            result = get_details(node_id="tm999", country="US")
 
         assert "No details found" in result
 
@@ -316,7 +316,7 @@ class TestGetDetails:
         with patch(
             "mcp_justwatch.server.justwatch.details", return_value=mock_entry
         ) as mock_details:
-            result = get_details.fn(node_id="tm123", country="FR", language="fr", best_only=False)
+            result = get_details(node_id="tm123", country="FR", language="fr", best_only=False)
 
         mock_details.assert_called_once_with(
             node_id="tm123", country="FR", language="fr", best_only=False
@@ -330,7 +330,7 @@ class TestGetDetails:
         with patch(
             "mcp_justwatch.server.justwatch.details", return_value=mock_entry
         ) as mock_details:
-            get_details.fn(node_id="tm123", country="gb", language="EN")
+            get_details(node_id="tm123", country="gb", language="EN")
 
         call_args = mock_details.call_args
         assert call_args.kwargs["country"] == "GB"
@@ -339,7 +339,7 @@ class TestGetDetails:
     def test_get_details_exception_handling(self):
         """Test exception handling in details."""
         with patch("mcp_justwatch.server.justwatch.details", side_effect=Exception("API Error")):
-            result = get_details.fn(node_id="tm123")
+            result = get_details(node_id="tm123")
 
         assert "Error" in result
         assert "API Error" in result
@@ -359,7 +359,7 @@ class TestGetOffersForCountries:
         }
 
         with patch("mcp_justwatch.server.justwatch.offers_for_countries", return_value=mock_offers):
-            result = get_offers_for_countries.fn(node_id="tm123", countries=["US", "GB"])
+            result = get_offers_for_countries(node_id="tm123", countries=["US", "GB"])
 
         assert "US:" in result
         assert "GB:" in result
@@ -369,7 +369,7 @@ class TestGetOffersForCountries:
     def test_get_offers_no_results(self):
         """Test offers retrieval with no results."""
         with patch("mcp_justwatch.server.justwatch.offers_for_countries", return_value={}):
-            result = get_offers_for_countries.fn(node_id="tm999", countries=["US"])
+            result = get_offers_for_countries(node_id="tm999", countries=["US"])
 
         assert "No offers found" in result
 
@@ -381,7 +381,7 @@ class TestGetOffersForCountries:
         }
 
         with patch("mcp_justwatch.server.justwatch.offers_for_countries", return_value=mock_offers):
-            result = get_offers_for_countries.fn(node_id="tm123", countries=["US", "XX"])
+            result = get_offers_for_countries(node_id="tm123", countries=["US", "XX"])
 
         assert "US:" in result
         assert "XX:" in result
@@ -394,7 +394,7 @@ class TestGetOffersForCountries:
         with patch(
             "mcp_justwatch.server.justwatch.offers_for_countries", return_value=mock_offers
         ) as mock_func:
-            get_offers_for_countries.fn(node_id="tm123", countries=["us", "gb"])
+            get_offers_for_countries(node_id="tm123", countries=["us", "gb"])
 
         # Check that countries were uppercased and converted to set
         call_args = mock_func.call_args
@@ -407,7 +407,7 @@ class TestGetOffersForCountries:
         with patch(
             "mcp_justwatch.server.justwatch.offers_for_countries", return_value=mock_offers
         ) as mock_func:
-            get_offers_for_countries.fn(
+            get_offers_for_countries(
                 node_id="tm123",
                 countries=["US"],
                 language="es",
@@ -433,7 +433,7 @@ class TestGetOffersForCountries:
         }
 
         with patch("mcp_justwatch.server.justwatch.offers_for_countries", return_value=mock_offers):
-            result = get_offers_for_countries.fn(node_id="tm123", countries=["US"])
+            result = get_offers_for_countries(node_id="tm123", countries=["US"])
 
         assert "Amazon" in result
         assert "RENT" in result
@@ -447,7 +447,7 @@ class TestGetOffersForCountries:
             "mcp_justwatch.server.justwatch.offers_for_countries",
             side_effect=Exception("API Error"),
         ):
-            result = get_offers_for_countries.fn(node_id="tm123", countries=["US"])
+            result = get_offers_for_countries(node_id="tm123", countries=["US"])
 
         assert "Error" in result
         assert "API Error" in result

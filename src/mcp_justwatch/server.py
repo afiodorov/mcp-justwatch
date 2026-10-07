@@ -1,7 +1,7 @@
 """MCP server for JustWatch streaming availability data using FastMCP."""
 
 import logging
-from typing import Optional
+import os
 
 from fastmcp import FastMCP
 from simplejustwatchapi import justwatch
@@ -9,17 +9,21 @@ from simplejustwatchapi import justwatch
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Configure file handler for this module's logger only
-file_handler = logging.FileHandler("output.log", mode="a")
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
-logger.addHandler(file_handler)
+# Optionally also log this module to a file (off by default: read-only filesystems
+# like AWS Lambda can't open one, and stdio clients may start us in any directory)
+if log_file := os.environ.get("MCP_JUSTWATCH_LOG_FILE"):
+    file_handler = logging.FileHandler(log_file, mode="a")
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    )
+    logger.addHandler(file_handler)
 
 # Initialize FastMCP server
 mcp = FastMCP("mcp-justwatch")
 
 
-def format_media_entry(entry, index: Optional[int] = None) -> str:
+def format_media_entry(entry, index: int | None = None) -> str:
     """Format a MediaEntry object as a readable string."""
     lines = []
 
@@ -130,8 +134,8 @@ def search_content(
         return "\n".join(output_lines)
 
     except Exception as e:
-        logger.error(f"Error searching for content: {e}", exc_info=True)
-        return f"Error searching for content: {str(e)}"
+        logger.exception("Error searching for content")
+        return f"Error searching for content: {e!s}"
 
 
 @mcp.tool()
@@ -172,8 +176,8 @@ def get_details(
         return "\n".join(output_lines)
 
     except Exception as e:
-        logger.error(f"Error getting details: {e}", exc_info=True)
-        return f"Error getting details: {str(e)}"
+        logger.exception("Error getting details")
+        return f"Error getting details: {e!s}"
 
 
 @mcp.tool()
@@ -234,8 +238,8 @@ def get_offers_for_countries(
         return "\n".join(output_lines)
 
     except Exception as e:
-        logger.error(f"Error getting offers: {e}", exc_info=True)
-        return f"Error getting offers: {str(e)}"
+        logger.exception("Error getting offers")
+        return f"Error getting offers: {e!s}"
 
 
 def main():

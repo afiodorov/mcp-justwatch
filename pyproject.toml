@@ -12,7 +12,7 @@ authors = [
     { name = "Karol Krizka", email = "kkrizka@gmail.com" }
 ]
 dependencies = [
-    "fastmcp",
+    "fastmcp>=4",
     "simple-justwatch-python-api",
 ]
 
