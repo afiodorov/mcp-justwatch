@@ -49,6 +49,14 @@ pip install -e ".[dev]"
 
 ## Usage
 
+### Hosted (no install)
+
+A public instance runs at `https://aws.fiodorov.es/justwatch/mcp` (Streamable HTTP, no auth). Add it as a remote MCP server in any client, e.g. Claude Code:
+
+```bash
+claude mcp add --transport http justwatch https://aws.fiodorov.es/justwatch/mcp
+```
+
 ### As an MCP Server
 
 This server is designed to be used with MCP clients. Add it to your MCP client configuration:
@@ -84,6 +92,10 @@ Or if installed in a virtual environment:
 #### Other MCP Hosts
 
 See the `mcphost-config.yaml` example file for configuration with other MCP hosts.
+
+### On AWS Lambda
+
+`mcp_justwatch.lambda_handler.lambda_handler` serves the same tools as a stateless Streamable HTTP endpoint (JSON responses, no sessions) for a Lambda Function URL. It ignores the request path, so it can sit behind any CloudFront route. Package the dependencies and `src/mcp_justwatch` into a zip and point the function's handler at it.
 
 ## Development
 
